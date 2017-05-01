@@ -42,11 +42,11 @@ bitstream=randi([0 1],1,1160);
 l=length(bitstream);
 B=bitstream;
 % %% Channel EnCoding using Hamming
-% m = 8;           % Number of bits per symbol or letter
-% n = 2^m - 1;     % n=Codeword length,255;
-% k=n-m;
+m = 8;           % Number of bits per symbol or letter
+n = 2^m - 1;     % n=Codeword length,255;
+k=n-m;
 %
-% B = encode(bitstream,n,k,'hamming');
+B = encode(bitstream,n,k,'hamming');
 
 %% Block Division: Module size=4x4;
 
