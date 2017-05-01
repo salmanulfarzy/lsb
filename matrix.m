@@ -1,7 +1,7 @@
 clc;
 clear all;
 close all;
-warning off
+% warning off
 
 pkg load image
 pkg load communications
@@ -15,7 +15,7 @@ pkg load communications
 % end
 
 % im=imread( [pn fn] );
-im = imread('lena.jpg')
+im = imread('lena.jpg');
 
 figure
 imshow(im);
@@ -38,7 +38,7 @@ g=rgb2gray(im);
 % title('Cover image in gray');
 
 
-bitstream=randi([0 1],1,1160)
+bitstream=randi([0 1],1,1160);
 l=length(bitstream);
 B=bitstream;
 % %% Channel EnCoding using Hamming
