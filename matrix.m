@@ -557,6 +557,11 @@ for i=1:a
 
 
         % s(1,1:7)=sv
+
+        s1 = int8(s1);
+        s2 = int8(s2);
+        s3 = int8(s3);
+
         d1 = bi2de(s1);
         kk1(i,j)=d1;
 
