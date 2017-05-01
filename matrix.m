@@ -3,16 +3,19 @@ clear all;
 close all;
 warning off
 
+pkg load image
+pkg load communications
 
 %% *------------------- Picode Encoding------------------------------*
 %% Input image
 
-[fn,pn]=uigetfile('*.*','Select the Cover Image');
-if fn==0
-    return
-end
+% [fn,pn]=uigetfile({'*.git;*.png;*.jpg','Select the Cover Image'});
+% if fn==0
+    % return
+% end
 
-im=imread( [pn fn] );
+% im=imread( [pn fn] );
+im = imread('lena.jpg')
 
 figure
 imshow(im);
@@ -23,12 +26,12 @@ title('Cover image');
 new=im;
 
 %% Image Resizal
-im=imresize(im,[116 116]);  % for 29 x 29 modules
+im=imresize (im,[116 116]);  % for 29 x 29 modules
 figure;
 imshow(im);
 title('Resized cover Image');
 
-%% RGB to Gray 
+%% RGB to Gray
 g=rgb2gray(im);
 % figure;
 % imshow(g);
@@ -42,34 +45,32 @@ B=bitstream;
 % m = 8;           % Number of bits per symbol or letter
 % n = 2^m - 1;     % n=Codeword length,255;
 % k=n-m;
-% 
+%
 % B = encode(bitstream,n,k,'hamming');
 
-%% Block Division: Module size=4x4; 
+%% Block Division: Module size=4x4;
 
 [r,c]=size(g);  % Y component and gray component is almost same. here we use gray image 'g'.
 
-Rsize=4; 
+Rsize=4;
 CSize=4;
 
-Rows=floor(r/Rsize);  
-Col=floor(c/CSize);     
+Rows=floor(r/Rsize);
+Col=floor(c/CSize);
 
-R=[Rsize*ones(1,Rows)]; 
-C=[CSize*ones(1,Col)]; 
+R=[Rsize*ones(1,Rows)];
+C=[CSize*ones(1,Col)];
 
-I=mat2cell(g,R,C);      
+I=mat2cell(g,R,C);
 
-[s1,s2]=size(I);  
+[s1,s2]=size(I);
 
 %% calculation of ei (inner) and eo (outer)
 
 for i=1:s1
     for j=1:s2
-
          for r=1:4
              for c=1:4
-
                  if (r==2||r==3||c==2||c==3) % Inner Pixel
                      ei(i,j) = mean2(I{i,j}(r,c));
                  end
@@ -112,7 +113,7 @@ for i=1:s1
                       mu_dark(i,j)=mean2(I{i,j}(sub_row, sub_col));
                 end
 
-                C(i,j)=mu_bright(i,j)-mu_dark(i,j);   
+                C(i,j)=mu_bright(i,j)-mu_dark(i,j);
 
             end
         end
@@ -133,10 +134,8 @@ delta_I=cell(s1,s2);
 
 for i=1:s1
     for j=1:s2
-
         for r=1:4
             for c=1:4
-
                 if (r==2||r==3||c==2||c==3) % Inner pixel
                     delta_I{i,j}(r,c) = ceil((C(i,j)+eta)/lambda).*lambda + ei(i,j);
                 end
@@ -147,14 +146,13 @@ for i=1:s1
 
             end
         end
-
     end
 end
 
 %% Bit Padding with zeros: since the blocks are of size 29*29=841, each bit has to be given to each block.
-% size has to be made of same size; 
+% size has to be made of same size;
 
-%B(end+1:841)=0; % pads zeros from next 
+%B(end+1:841)=0; % pads zeros from next
 %C1=B(1:841);
 %V1=vec2mat(C1,65);
 C1=B;
@@ -194,8 +192,7 @@ Im=cell(s1,s2);
 
 for i=1:s1
     for j=1:s2
-
-        for r= 1:4 
+        for r= 1:4
             for c= 1:4
 
                 if (r==2||r==3||c==2||c==3)
@@ -204,12 +201,11 @@ for i=1:s1
 
                 if (r==1||c==4||r==4||c==1)
                       Im{i,j}(r,c) = I{i,j}(r,c)+ term{i,j}(r,c);
-                 end
+                end
 
-            end  
+            end
         end
-
-   end     
+   end
 end
 
 I_modulated=cell2mat(Im);
@@ -224,15 +220,13 @@ Im_new=Im;
 % Bit 1  mapping : if inner = 255, outer to 0.
 for i=1:s1
     for j=1:s2
-
         for r=1:4
             for c=1:4
-
                 if (r==2||r==3||c==2||c==3)
 
                     if Im{i,j}(r,c)>1; % inner non zero pixels
 
-                        Im{i,j}(r,c)=255; 
+                        Im{i,j}(r,c)=255;
 
                         % outer pixels
 
@@ -261,23 +255,17 @@ for i=1:s1
                         Im{i,j}(4,4)=0;
 
                     end
-
                 end
-
             end
-
         end
-
     end
 end
 
 % Bit 0 Mapping
 for i=1:s1
     for j=1:s2
-
         for r=1:4
             for c=1:4
-
                 if (r==2||r==3||c==2||c==3)
 
                     if Im{i,j}(1:4,1:4)==0;
@@ -336,12 +324,12 @@ end
 
 %% Superimposing Images
 newyu=I_modulated;
-out=im + newyu*0.1; 
+out=im + newyu*0.1;
 % figure;
 % imshow(out);
 % title('Bar Code Content');
-% 
-%% Boundary Padded Picode Image: Padding matrix with zeros. Increases rows & cols 
+%
+%% Boundary Padded Picode Image: Padding matrix with zeros. Increases rows & cols
 zer_v=zeros(1,116,3);
 
 v=vertcat(zer_v,out);
@@ -399,26 +387,26 @@ title('PiCode Image');
 
 imwrite(h,'picoimg.jpg');
 
-%% secrete image embedding 
+%% secrete image embedding
 
-im_d=h; % generated pi code 
+im_d=h; % generated pi code
 figure;
 imshow(im_d);
-title('Picode Input Image/ cover image '); 
+title('Picode Input Image/ cover image ');
 
-% secrete image  
+% secrete image
 m=imread('cameraman.tif');
 % m=imread('coins.png');
 
 % m=imread('mono.jpg');
 
 img = im_d ;
-% seperating components of Pi code image R, G,B 
+% seperating components of Pi code image R, G,B
 red = img(:,:,1); % Red channel
 green = img(:,:,2); % Green channel
 blue = img(:,:,3); % Blue channel
 
-% 
+%
 
 m = imresize(m,[120 120]);
 
@@ -429,7 +417,7 @@ green = imresize(green,[120 120]);
 blue = imresize(blue,[120 120]);
 % subplot(3,3,1)
 figure ,imshow(m);
-title('SECRETE IMAGE'); 
+title('SECRETE IMAGE');
 
 
 size(m);
@@ -447,6 +435,7 @@ k2k=[];
 k3k=[];
 sv1=[];
 tic
+
 % lsb encoding part
 [a, b, c]=size(kk1);
 for i=1:a
@@ -460,78 +449,77 @@ for i=1:a
         b1=bitxor(b1,s1(6));
         b1=bitxor(b1,s1(7));
 
-        if b1~=sv1(1)  
-
+        if b1~=sv1(1)
             s1(1)=~s1(1);
-end 
-b2=bitxor(s1(1),s1(4));
-b2=bitxor(b2,s1(5));
-b2=bitxor(b2,s1(7));
-
-if b2~=sv1(2) 
-
-    s1(2)=~s1(2);
-end 
-b3=bitxor(s1(3),s1(5));
-b3=bitxor(b3,s1(6));
-b3=bitxor(b3,s1(7));
-
-if b3~=sv1(3) 
-
-    s1(3)=~s1(3);
-end 
-if (b1~=sv1(1))&&(b3~=sv1(3))
-       s1(6)=~s1(6);
-end
-if (b1~=sv1(1))&&(b2~=sv1(2))
-       s1(4)=~s1(4);
-end
-
-if (b3~=sv1(3))&&(b2~=sv1(2))
-       s1(5)=~s1(5);
-end
-% if (b3~=sv1(3))&&(b1~=sv1(1))
-%        s1(6)=~s1(6);
-% end
-
-if (b1~=sv1(1))&&(b3~=sv1(3))&&(b2~=sv1(2))
-       s1(7)=~s1(7);
-end
-
-
-
-s2=de2bi(kk2(i,j),8);
-
-%         s2(1:3)=sv1(4:6);
-b11=bitxor(s2(1),s2(4));
-b11=bitxor(b11,s2(6));
-b11=bitxor(b11,s2(7));
-
-if b11~=sv1(4)
-
-    s2(1)=~s2(1);
-end 
-b22=bitxor(s2(1),s2(4));
-b22=bitxor(b22,s2(5));
-b22=bitxor(b22,s2(7));
-
-if b22~=sv1(5)
-
-    s2(2)=~s2(2);
-end 
-b33=bitxor(s2(3),s1(5));
-b33=bitxor(b33,s1(6));
-b33=bitxor(b33,s1(7));
-
-if b33~=sv1(6)
-
-            s2(3)=~s2(3);
         end
 
+        b2=bitxor(s1(1),s1(4));
+        b2=bitxor(b2,s1(5));
+        b2=bitxor(b2,s1(7));
+
+        if b2~=sv1(2)
+            s1(2)=~s1(2);
+        end
+
+        b3=bitxor(s1(3),s1(5));
+        b3=bitxor(b3,s1(6));
+        b3=bitxor(b3,s1(7));
+
+        if b3~=sv1(3)
+            s1(3)=~s1(3);
+        end
+
+        if (b1~=sv1(1))&&(b3~=sv1(3))
+           s1(6)=~s1(6);
+        end
+
+        if (b1~=sv1(1))&&(b2~=sv1(2))
+           s1(4)=~s1(4);
+        end
+
+        if (b3~=sv1(3))&&(b2~=sv1(2))
+               s1(5)=~s1(5);
+        end
+
+        % if (b3~=sv1(3))&&(b1~=sv1(1))
+        %        s1(6)=~s1(6);
+        % end
+
+        if (b1~=sv1(1))&&(b3~=sv1(3))&&(b2~=sv1(2))
+               s1(7)=~s1(7);
+        end
+
+        s2=de2bi(kk2(i,j),8);
+
+        %         s2(1:3)=sv1(4:6);
+        b11=bitxor(s2(1),s2(4));
+        b11=bitxor(b11,s2(6));
+        b11=bitxor(b11,s2(7));
+
+        if b11~=sv1(4)
+            s2(1)=~s2(1);
+        end
+
+        b22=bitxor(s2(1),s2(4));
+        b22=bitxor(b22,s2(5));
+        b22=bitxor(b22,s2(7));
+
+        if b22~=sv1(5)
+            s2(2)=~s2(2);
+        end
+
+        b33=bitxor(s2(3),s1(5));
+        b33=bitxor(b33,s1(6));
+        b33=bitxor(b33,s1(7));
+
+        if b33~=sv1(6)
+            s2(3)=~s2(3);
+        end
 
         if (b11~=sv1(4))&&(b33~=sv1(6))
             s2(6)=~s2(6);
         end
+
         if (b11~=sv1(4))&&(b22~=sv1(5))
             s2(4)=~s2(4);
         end
@@ -539,16 +527,14 @@ if b33~=sv1(6)
         if (b33~=sv1(6))&&(b22~=sv1(5))
             s2(5)=~s2(5);
         end
+
         if (b33~=sv1(6))&&(b11~=sv1(4))
             s2(6)=~s2(6);
-end
-
-
-if (b11~=sv1(4))&&(b33~=sv1(6))&&(b22~=sv1(5))
-            s2(7)=~s2(7);
         end
 
-
+        if (b11~=sv1(4))&&(b33~=sv1(6))&&(b22~=sv1(5))
+            s2(7)=~s2(7);
+        end
 
         s3=de2bi(kk3(i,j),8);
 
@@ -662,6 +648,7 @@ for i=1:a
         z(i,j)=bi2de(sv) ;
     end
 end
+
 figure
 imshow(uint8(z))
 title(' Secrete image Decoded')
@@ -671,17 +658,14 @@ y=uint8(z);
 imwrite(y,'rtdimg.jpg');
 toc
 %  m=im2bw(m)
-% 
+%
 %      pk=uint8(z);
 %      pk=im2bw(pk)
 % % pkk=histeq(pk)
-% %  
+% %
 % figure
 % imshow(m);
 % figure
 % imshow(pk);
 
 % % title('Restored Image');
-% %  
-% 
-
